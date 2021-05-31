@@ -16,3 +16,35 @@
  */
 
 package com.example.android.devbyteviewer.work
+
+import android.content.Context
+import androidx.work.CoroutineWorker
+import androidx.work.WorkerParameters
+import com.example.android.devbyteviewer.database.getDataBase
+import com.example.android.devbyteviewer.repository.VideosRepository
+import retrofit2.HttpException
+
+
+//Will set the Work in the Application.kt
+class RefreshDataWork (appContext: Context, params: WorkerParameters):
+        CoroutineWorker(appContext, params) {
+
+    //define a work name that can be used to uniquely identify this worker.
+    companion object{
+        const val WORK_NAME = "RefreshDataWorker"
+    }
+
+
+    override suspend fun doWork(): Result {
+        val database = getDataBase(applicationContext)
+        val repository = VideosRepository(database)
+
+        return try {
+            repository.refreshVideos()
+            Result.success()
+        } catch (exception: HttpException) {
+            Result.retry()
+        }
+    }
+
+}
